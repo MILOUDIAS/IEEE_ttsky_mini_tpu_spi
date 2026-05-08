@@ -28,6 +28,14 @@ module tb ();
 `endif
   wire sck;
 
+  initial begin
+    clk = 1'b0;
+    rst_n = 1'b0;
+    ena = 1'b0;
+    ui_in = 8'b0;
+    uio_in = 8'b0;
+  end
+
   assign sck = ui_in[2]; // Assuming SCLK is connected to ui_in[2]
   // Replace tt_um_example with your module name:
   tt_um_tpu user_project (
