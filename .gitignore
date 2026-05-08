@@ -15,11 +15,9 @@ test/pe/results.xml
 /test/memory/sim_build
 /test/memory/__pycache__
 test/memory/results.xml
-<<<<<<< Updated upstream
 /src/__pycache__
 src/results.xml
 /src/sim_build
-=======
->>>>>>> Stashed changes
 /test/control/__pycache__
 test/control/results.xml
+/test/control/sim_build
