@@ -3,7 +3,6 @@
  
  # defaults
  SIM ?= icarus
- # SIM ?= verilator
  TOPLEVEL_LANG ?= verilog
  SRC_DIR = $(PWD)/../src
  PROJECT_SOURCES = tpu_interface.v spi.v tpu.v control.v memory.v array.v pe.v tt_um_tpu.v
@@ -25,9 +24,7 @@
  COMPILE_ARGS    += -DUNIT_DELAY=\#1
  VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
  VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/sky130_fd_sc_hd.v
-# COMPILE_ARGS += --timing
-
-
+ 
  # this gets copied in by the GDS action workflow
  VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
  
