@@ -188,7 +188,7 @@ async def generate_clock(dut, bit_index, period_ns):
 
 @cocotb.test()
 async def Test_TPU(dut):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
     dut.rst_n.value = 0
     dut.ena.value = 1
     dut.ui_in.value = 2
@@ -197,7 +197,9 @@ async def Test_TPU(dut):
     cocotb.log.info("\nStart Testing TPU\n")
     spi = dut.user_project.uut_tpu_interface.uut_spi
     await hw_reset(dut)
-    dut._log.info(f"PROBE post-reset: rst_n={dut.rst_n.value} bit_counter={spi.bit_counter.value} data_buffer={spi.data_buffer.value} output_data_bit_counter={spi.output_data_bit_counter.value}")
+    dut._log.info(
+        f"PROBE post-reset: rst_n={dut.rst_n.value} bit_counter={spi.bit_counter.value} data_buffer={spi.data_buffer.value} output_data_bit_counter={spi.output_data_bit_counter.value}"
+    )
     return
 
     async def test_and_log(A: list, B: list):
