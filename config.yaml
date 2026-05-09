@@ -19,13 +19,14 @@ VERILOG_FILES:
   - dir::src/pe.v
   - dir::src/spi.v
 
-# NOTE: USE_POWER_PINS is intentionally NOT in VERILOG_DEFINES for the
-# local librelane flow. With it defined, the top-level inout VPWR/VGND
-# ports survive into the netlist and add power-grid routing that, on
-# this 160x100 die, eats just enough cell-area budget that detailed
-# placement fails after CTS ([DPL-0036]). The TT GDS workflow defines
-# USE_POWER_PINS itself; the source still carries the canonical guards
-# in `tt_um_tpu.v` so that path produces the standard TT-shaped netlist.
+# Match TT's standard synthesis: define USE_POWER_PINS so the
+# top module exposes inout VPWR/VGND, the synthesized netlist's
+# FILLER/decap cells instantiate with their power pins, and the
+# local netlist has the same shape as the one TT's tt-gds-action
+# produces. This lets `test/tb.v` work for both flows without
+# any conditional wiring.
+VERILOG_DEFINES:
+  - USE_POWER_PINS
 
 # ---------- Clock ----------
 # Loose enough that hold/setup don't force heavy buffering. The TT pin

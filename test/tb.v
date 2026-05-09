@@ -22,12 +22,12 @@ module tb ();
   wire [7:0] uo_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
-  // USE_POWER_PINS-gated, not GL_TEST-gated: the local librelane flow
-  // does NOT define USE_POWER_PINS at synth, so its netlist top has no
-  // VPWR/VGND ports — connecting them here would fail elaboration. The
-  // TT GDS workflow does define USE_POWER_PINS at both synth and sim,
-  // so its netlist exposes the ports and tb wires them to 1/0.
-`ifdef USE_POWER_PINS
+  // Both the local librelane flow (config.yaml has VERILOG_DEFINES:
+  // [USE_POWER_PINS]) and the TT GDS workflow synth with
+  // USE_POWER_PINS defined, so the netlist top exposes VPWR/VGND. We
+  // gate the wiring on GL_TEST so RTL sim (no power ports on the
+  // source `tt_um_tpu`) still elaborates cleanly.
+`ifdef GL_TEST
   wire VPWR = 1'b1;
   wire VGND = 1'b0;
 `endif
@@ -36,7 +36,7 @@ module tb ();
   assign sck = ui_in[2]; // Assuming SCLK is connected to ui_in[2]
   // Replace tt_um_example with your module name:
   tt_um_tpu user_project (
-`ifdef USE_POWER_PINS
+`ifdef GL_TEST
       .VPWR(VPWR),
       .VGND(VGND),
 `endif
