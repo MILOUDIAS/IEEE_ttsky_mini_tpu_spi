@@ -19,11 +19,13 @@
  SIM_BUILD				= sim_build/gl
  COMPILE_ARGS    += -DGL_TEST
  COMPILE_ARGS    += -DFUNCTIONAL
+
  # NOTE: USE_POWER_PINS is intentionally NOT defined. The synthesized
  # netlist (tt_um_tpu.nl.v) does not expose VPWR/VGND ports, so the
  # power-aware cell models would see them as X and propagate that
  # everywhere. The functional models without power-pin checks are
  # equivalent for behavioural verification.
+ COMPILE_ARGS    += -DUSE_POWER_PINS
  COMPILE_ARGS    += -DSIM
  COMPILE_ARGS    += -DUNIT_DELAY=\#1
  VERILOG_SOURCES += $(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/verilog/primitives.v
