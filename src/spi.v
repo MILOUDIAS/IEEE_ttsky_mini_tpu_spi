@@ -21,6 +21,7 @@ module spi (
 
 reg [`INSTRUCTION_WIDTH-1:0] data_buffer;
 reg [`BIT_COUNT-1:0] bit_counter;
+reg [`BIT_COUNT-1:0] bit_counter_prev;
 reg [$clog2(`ACC_WIDTH*`NN)-1:0] output_data_bit_counter; // Counter for bits in data_in
 //reg [3:0] addr_counter;
 reg data_ready;
@@ -64,8 +65,9 @@ always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         is_sending <= 0;
         data_ready <= 0;
+        bit_counter_prev <= 0;
     end else begin
-        if(cs && data_ready) data_ready <= 0;
+        bit_counter_prev <= bit_counter;
         if(ready_to_send && !cs) begin
             is_sending <= 1;
         end
@@ -73,9 +75,11 @@ always @(posedge clk or negedge rst_n) begin
             is_sending <= 0;
             //output_data_bit_counter <= 0;
         end
-        if(bit_counter == 0 && !data_ready) begin
-            data_ready <=1; 
-            //bit_counter = 0; // Reset bit counter after full instruction is received
+        // Pulse data_ready for exactly one clk cycle when bit_counter wraps
+        // from MAX (= INSTRUCTION_WIDTH-1) back to 0, i.e. right after the
+        // last bit of an instruction has been shifted in.
+        if (bit_counter == 0 && bit_counter_prev == `INSTRUCTION_WIDTH-1) begin
+            data_ready <= 1;
         end else begin
             data_ready <= 0;
         end

@@ -12,8 +12,8 @@ module control (
     input wire [`INST_LEN-1:0] instruction,
 
     output wire array_write_enable,
-    output wire [1:0] array_output_row,
-    output wire [1:0] array_output_col,
+    output reg  [1:0] array_output_row,
+    output reg  [1:0] array_output_col,
 
     output wire [`DATA_WIDTH-1:0] mema_data_in,
     output wire mema_write_enable,
@@ -109,8 +109,20 @@ module control (
     assign memb_write_line   = load_b ? row : 2'b00;
     assign memb_write_elem   = load_b ? col : 2'b00;
 
-    assign array_output_row    = is_store ? row : 2'b00;
-    assign array_output_col    = is_store ? col : 2'b00;
+    // Latch the STORE row/col on each STORE instruction so that the result
+    // mux holds a stable value between SPI transactions. The SPI's
+    // data_ready is a single-cycle pulse, so without latching the result
+    // would only be valid for one clk cycle per STORE.
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            array_output_row <= 2'b00;
+            array_output_col <= 2'b00;
+        end else if (is_store) begin
+            array_output_row <= row;
+            array_output_col <= col;
+        end
+    end
+
     assign array_write_enable  = is_run;
 
 endmodule

@@ -42,9 +42,15 @@ module pe (
             c_reg <= c_reg + mult_trunc;
     end
 
-    // Pipeline regs without reset (smaller dfxtp cells)
-    always @(posedge clk) begin
-        if (we) begin
+    // Pipeline regs with async reset. The initial block above keeps RTL
+    // clean, but in synthesis the initial is dropped, so we need a real
+    // reset to avoid X poisoning the multiplier in gate-level sims
+    // (X * 0 = X in Verilog 4-state arithmetic).
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            a_reg <= {`DATA_WIDTH{1'b0}};
+            b_reg <= {`DATA_WIDTH{1'b0}};
+        end else if (we) begin
             a_reg <= a_in;
             b_reg <= b_in;
         end
