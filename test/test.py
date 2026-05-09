@@ -128,6 +128,29 @@ async def run_once(dut, a, b):
     return hw_out, sw_out
 
 
+async def gl_preheat(dut):
+    """Sim-only X mitigation for gate-level tests.
+
+    The PE pipeline regs (`a_reg`/`b_reg` in pe.v) have no reset (they use
+    smaller dfxtp cells), so in GL sim they power up X and the multiplier
+    poisons every accumulator (X * 0 = X in 4-state Verilog).
+
+    To break the X chain, run a complete matmul with all-zero memory.
+    Each PE captures D=0 into its FF state once we=1 fires, and after
+    enough cycles every pipeline reg holds a valid 0. The c_reg
+    accumulators get X-poisoned during the first cycles of this preheat,
+    so hw_reset clears them at the end. PE pipe regs are *not* reset by
+    rst_n, so the valid 0 state survives, and every subsequent test
+    starts from a clean slate.
+    """
+    zeros = [[0] * 3 for _ in range(3)]
+    await load_matrices(dut, zeros, zeros)
+    await send_instr(dut, make_instr(OP_RUN))
+    for _ in range(16):
+        await RisingEdge(dut.clk)
+    await hw_reset(dut)
+
+
 def log_matrix(dut, title, mat):
     dut._log.info(f"--- {title} ---")
     for i, row in enumerate(mat):
@@ -164,6 +187,13 @@ async def Test_TPU(dut):
         await RisingEdge(dut.clk)
 
     cocotb.log.info(f"Start Testing TPU (GL_TEST={GL_TEST})")
+
+    if GL_TEST:
+        # One-time PE pipeline init for GL. PE FFs have no reset; the
+        # preheat run clocks valid zeros through them so subsequent
+        # tests don't see X propagation.
+        await hw_reset(dut)
+        await gl_preheat(dut)
 
     failures = []
 

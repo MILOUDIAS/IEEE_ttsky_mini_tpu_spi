@@ -20,10 +20,29 @@ module tt_um_tpu (
 );
 
 
-assign uio_oe[0] = 1; // Enable MISO output
-assign uio_oe[7:1] = 0; // Disable other outputs
+// Drive the unused/constant output pins through (* keep *)-attributed
+// flip-flops rather than direct constant assigns. Yosys would otherwise
+// tie them straight to a `sky130_fd_sc_hd__conb_1.LO` cell, whose
+// internal pulldown to VGND causes magic's spice extraction to merge
+// the pin nets with VGND — and the resulting electrical shorts make
+// LVS report dozens of unmatched-pin errors. With (* keep *) the
+// registers survive synthesis as real dfrtp cells driving each pin.
+(* keep = "true" *) reg [6:0] uio_oe_high_q;
+(* keep = "true" *) reg [6:0] uio_out_high_q;
 
-assign uio_out[7:1] = 0; // Set unused outputs to 0
+always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+        uio_oe_high_q  <= 7'b0;
+        uio_out_high_q <= 7'b0;
+    end else begin
+        uio_oe_high_q  <= 7'b0;
+        uio_out_high_q <= 7'b0;
+    end
+end
+
+assign uio_oe[0]    = 1'b1;            // MISO output enable (constant 1)
+assign uio_oe[7:1]  = uio_oe_high_q;   // unused; held at 0 by FFs
+assign uio_out[7:1] = uio_out_high_q;  // unused; held at 0 by FFs
 
 
 tpu_interface uut_tpu_interface(

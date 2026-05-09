@@ -13,11 +13,7 @@
 
   "//": "PL_TARGET_DENSITY_PCT - You can increase this if Global Placement fails with error GPL-0302.",
   "//": "Users have reported that values up to 80 worked well for them.",
-  "//": "Lowered from 85 to 70: with the added async resets in pe.v (a_reg/b_reg)",
-  "//": "and the bit_counter_prev / array_output_row/col registers, an 85% target",
-  "//": "left the legalizer no slack after CTS inserted the clock buffers and CTS",
-  "//": "failed with [DPL-0036] Detailed placement failed.",
-  "PL_TARGET_DENSITY_PCT": 70,
+  "PL_TARGET_DENSITY_PCT": 85,
 
   "//": "CLOCK_PERIOD - Increase this in case you are getting setup time violations.",
   "//": "The value is in nanoseconds, so 20ns == 50MHz.",
