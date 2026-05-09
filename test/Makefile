@@ -19,6 +19,12 @@
  SIM_BUILD				= sim_build/gl
  COMPILE_ARGS    += -DGL_TEST
  COMPILE_ARGS    += -DFUNCTIONAL
+ # USE_POWER_PINS must be defined for GL: the netlist (from either
+ # local librelane with VERILOG_DEFINES=USE_POWER_PINS, or TT's
+ # tt-gds-action) instantiates FILLER/decap cells that connect VPWR/
+ # VGND/VNB/VPB. Without -DUSE_POWER_PINS the loaded sky130 cell
+ # models don't declare those ports and iverilog elaboration fails
+ # with thousands of "port VPWR is not a port of FILLER_*" errors.
  COMPILE_ARGS    += -DUSE_POWER_PINS
  COMPILE_ARGS    += -DSIM
  COMPILE_ARGS    += -DUNIT_DELAY=\#1

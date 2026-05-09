@@ -19,26 +19,49 @@ VERILOG_FILES:
   - dir::src/pe.v
   - dir::src/spi.v
 
+# Match TT's standard synthesis: define USE_POWER_PINS so the
+# top module exposes inout VPWR/VGND, the synthesized netlist's
+# FILLER/decap cells instantiate with their power pins, and the
+# local netlist has the same shape as the one TT's tt-gds-action
+# produces. This lets `test/tb.v` work for both flows without
+# any conditional wiring.
+VERILOG_DEFINES:
+  - USE_POWER_PINS
+
 # ---------- Clock ----------
 # Loose enough that hold/setup don't force heavy buffering. The TT pin
 # advertises 1 MHz; 50 ns (20 MHz) is still 20x faster than spec.
 CLOCK_PORT: clk
 CLOCK_PERIOD: 20
 
-# ---------- Floorplan: absolute 160 x 100 um TT 1x1 tile ----------
+# ---------- Floorplan: absolute 167 x 108 um TT 1x1 tile ----------
+# Using the canonical Tiny Tapeout 1x1 dimensions (per info.yaml: "a
+# single tile is about 167x108 uM"). The earlier 160x100 footprint
+# left only 15.5k um^2 of core — once CTS added 64 clock buffers and
+# 54 timing-repair buffers (post-CTS area: 14.7k um^2), density hit
+# ~95% and DPL-0036 fired with 35 unplaceable instances. 167x108
+# gives ~18k um^2 of core, dropping post-CTS density to ~82% with
+# comfortable legalisation margin.
 FP_SIZING: absolute
-DIE_AREA: [0, 0, 160, 100]
+DIE_AREA: [0, 0, 167, 108]
 # Tight margin to maximize placeable area (pins extend 1 um into the core).
-CORE_AREA: [1, 1, 159, 99]
+CORE_AREA: [1, 1, 166, 107]
 
-IO_PIN_H_LENGTH: 2
-IO_PIN_V_LENGTH: 2
+# Longer pin stubs help the router connect cells to top-edge pins
+# cleanly. With 2 um pins, the router occasionally couldn't reach
+# constant-tied output pins (uo_out[7], uio_oe[7]) on the new
+# 167x108 floorplan, leaving them shorted in magic extraction
+# and breaking LVS with 24 errors.
+IO_PIN_H_LENGTH: 4
+IO_PIN_V_LENGTH: 4
 
 # ---------- Synthesis: aggressive area mapping ----------
 SYNTH_STRATEGY: "AREA 0"
 SYNTH_ABC_BUFFERING: false
 
-# Leave plenty of headroom for CTS buffers — DPL needs space to legalize.
+# Match the values that fit at RUN_2026-05-09_12-58-11 (cell area
+# 12.7k µm² in a 15.5k µm² core, ~82% density before CTS). Tighter
+# values (75/90) tip the legalizer over after CTS adds clock buffers.
 FP_CORE_UTIL: 45
 PL_TARGET_DENSITY_PCT: 75
 

@@ -118,6 +118,18 @@ module tpu (
             result_array[array_output_row*`N + array_output_col] :
             {`ACC_WIDTH{1'b0}};
 
-    assign result = { {(8 - `ACC_WIDTH){1'b0}}, selected };
+    // Drive the unused upper bits of `result` through a (* keep *)
+    // flip-flop rather than a direct constant. Yosys would otherwise
+    // tie them straight to sky130_fd_sc_hd__conb_1.LO, whose internal
+    // pulldown to VGND causes magic to merge the corresponding output
+    // pins with VGND in the layout extraction — and LVS rejects the
+    // resulting "uo_out[7:4] shorted to VGND" mismatches.
+    (* keep = "true" *) reg [7-`ACC_WIDTH:0] result_high_q;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) result_high_q <= {(8 - `ACC_WIDTH){1'b0}};
+        else        result_high_q <= {(8 - `ACC_WIDTH){1'b0}};
+    end
+
+    assign result = { result_high_q, selected };
 
 endmodule

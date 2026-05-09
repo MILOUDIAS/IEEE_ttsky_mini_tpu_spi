@@ -22,6 +22,11 @@ module tb ();
   wire [7:0] uo_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
+  // Both the local librelane flow (config.yaml has VERILOG_DEFINES:
+  // [USE_POWER_PINS]) and the TT GDS workflow synth with
+  // USE_POWER_PINS defined, so the netlist top exposes VPWR/VGND. We
+  // gate the wiring on GL_TEST so RTL sim (no power ports on the
+  // source `tt_um_tpu`) still elaborates cleanly.
 `ifdef GL_TEST
   wire VPWR = 1'b1;
   wire VGND = 1'b0;
@@ -31,13 +36,10 @@ module tb ();
   assign sck = ui_in[2]; // Assuming SCLK is connected to ui_in[2]
   // Replace tt_um_example with your module name:
   tt_um_tpu user_project (
-
-      // Include power ports for the Gate Level test:
 `ifdef GL_TEST
       .VPWR(VPWR),
       .VGND(VGND),
 `endif
-
       .ui_in  (ui_in),    // Dedicated inputs
       .uo_out (uo_out),   // Dedicated outputs
       .uio_in (uio_in),   // IOs: Input path

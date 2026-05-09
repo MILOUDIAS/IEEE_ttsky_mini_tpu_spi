@@ -42,7 +42,11 @@ module pe (
             c_reg <= c_reg + mult_trunc;
     end
 
-    // Pipeline regs without reset (smaller dfxtp cells)
+    // Pipeline regs without reset (smaller dfxtp cells). The `initial`
+    // block above keeps these at 0 in RTL sim. In synthesis the
+    // initial is dropped — gate-level sims must seed the FFs from the
+    // testbench (see `\`ifdef GL_TEST` $deposit block in tb.v) to
+    // avoid X * 0 = X poisoning the multiplier.
     always @(posedge clk) begin
         if (we) begin
             a_reg <= a_in;
