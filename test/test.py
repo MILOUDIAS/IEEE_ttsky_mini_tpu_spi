@@ -20,7 +20,7 @@
 import os
 import random
 import cocotb
-from cocotb.clock    import Clock
+from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
 
@@ -30,8 +30,13 @@ OP_RUN, OP_LOAD, OP_STORE = 0b01, 0b10, 0b11
 
 
 def make_instr(op, mem_sel=0, row=0, col=0, imm=0):
-    return ((op & 3) << 10) | ((mem_sel & 1) << 9) | \
-           ((row & 3) << 6) | ((col & 3) << 4) | (imm & 0xf)
+    return (
+        ((op & 3) << 10)
+        | ((mem_sel & 1) << 9)
+        | ((row & 3) << 6)
+        | ((col & 3) << 4)
+        | (imm & 0xF)
+    )
 
 
 def _safe_int(val, default=0):
@@ -44,7 +49,7 @@ def _safe_int(val, default=0):
 
 async def send_instr(dut, instr):
     # Drop CS (bit 1) and SCK (bit 2): cs=0, sck=0, mosi=0.
-    dut.ui_in.value = _safe_int(dut.ui_in.value) & 0xf9
+    dut.ui_in.value = _safe_int(dut.ui_in.value) & 0xF9
     await RisingEdge(dut.clk)
 
     for i in range(12):
@@ -53,18 +58,18 @@ async def send_instr(dut, instr):
         # in GL sims where the MOSI and SCK paths can have different gate
         # delays. Without this, the rising SCK can latch the previous
         # MOSI value instead of `bit`.
-        dut.ui_in.value = (_safe_int(dut.ui_in.value) & 0xf8) | bit
+        dut.ui_in.value = (_safe_int(dut.ui_in.value) & 0xF8) | bit
         await RisingEdge(dut.clk)
         # Now raise SCK with MOSI already stable.
         dut.ui_in.value = _safe_int(dut.ui_in.value) | 4
         await RisingEdge(dut.clk)
         await RisingEdge(dut.clk)
         # Drop SCK; keep MOSI/CS state.
-        dut.ui_in.value = _safe_int(dut.ui_in.value) & 0xfb
+        dut.ui_in.value = _safe_int(dut.ui_in.value) & 0xFB
         await RisingEdge(dut.clk)
 
     # Raise CS so the SPI block is idle between instructions.
-    dut.ui_in.value = (_safe_int(dut.ui_in.value) & 0xf9) | 2
+    dut.ui_in.value = (_safe_int(dut.ui_in.value) & 0xF9) | 2
     await RisingEdge(dut.clk)
 
 
@@ -81,19 +86,19 @@ def matmul_ref(a, b):
     c = [[0] * n for _ in range(n)]
     for i in range(n):
         for j in range(n):
-            c[i][j] = sum(a[i][k] * b[k][j] for k in range(n)) & 0xf
+            c[i][j] = sum(a[i][k] * b[k][j] for k in range(n)) & 0xF
     return c
 
 
 async def load_matrices(dut, a, b):
     for r in range(3):
         for c in range(3):
-            await send_instr(dut, make_instr(OP_LOAD, 0, r, c, a[r][c] & 0xf))
+            await send_instr(dut, make_instr(OP_LOAD, 0, r, c, a[r][c] & 0xF))
     # The systolic array expects B transposed: column j of B flows down
     # column j of the array, so memory_b[r][c] must hold B[c][r].
     for r in range(3):
         for c in range(3):
-            await send_instr(dut, make_instr(OP_LOAD, 1, r, c, b[c][r] & 0xf))
+            await send_instr(dut, make_instr(OP_LOAD, 1, r, c, b[c][r] & 0xF))
 
 
 async def read_matrix(dut):
@@ -104,7 +109,7 @@ async def read_matrix(dut):
             # Allow the STORE-row/col latch and result mux to settle.
             await RisingEdge(dut.clk)
             await RisingEdge(dut.clk)
-            out[r][c] = _safe_int(dut.uo_out.value) & 0xf
+            out[r][c] = _safe_int(dut.uo_out.value) & 0xF
     return out
 
 
@@ -142,16 +147,16 @@ def diff_matrix(hw, sw):
 # =========================================================
 @cocotb.test()
 async def Test_TPU(dut):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
     # Drive all DUT inputs to known values BEFORE reading any of them.
     # Start rst_n high, then pulse it low in hw_reset(). This guarantees
     # a 1->0 transition on the async reset, which some GL FF cells need
     # in order to fire (an X->0 transition is not always seen as a
     # negedge in iverilog GL).
-    dut.rst_n.value  = 1
-    dut.ena.value    = 1
-    dut.ui_in.value  = 2     # cs=1 idle, sck=0, mosi=0
+    dut.rst_n.value = 1
+    dut.ena.value = 1
+    dut.ui_in.value = 2  # cs=1 idle, sck=0, mosi=0
     dut.uio_in.value = 0
 
     # Let the initial assignments propagate.
@@ -178,7 +183,7 @@ async def Test_TPU(dut):
         else:
             dut._log.info(f"{name}: PASS")
 
-    I    = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    I = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     tens = [[10, 10, 10], [10, 10, 10], [10, 10, 10]]
 
     await test_and_log("I*tens", I, tens)
