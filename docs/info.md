@@ -2,7 +2,7 @@
 
 <!-- ![mini-tpu-diagram](./mini_tpu_block.png) -->
 
-This project implements a **Mini Tensor Processing Unit (Mini-TPU)** on the **Tiny Tapeout** open-source ASIC platform. It features a compact 3×3 **systolic array** optimized for efficient matrix multiplication, making it ideal for **resource-constrained AI inference** tasks.
+This project implements a **Mini Tensor Processing Unit (Mini-TPU)** on the **Tiny Tapeout** open-source ASIC platform. It features an SPI interface for instruction/memory and a compact 3×3 **systolic array** optimized for efficient matrix multiplication, making it ideal for **resource-constrained AI inference** tasks.
 
 ✨ Built using **Tiny Tapeout** and **Skywater 130nm PDK**  
 🎯 Educational, efficient, and open-source
@@ -15,7 +15,7 @@ The Mini-TPU is structured around a **weight-stationary systolic array** for acc
 
 Key components:
 
-- **3×3 Processing Element (PE) array** for 8-bit MAC operations
+- **3×3 Processing Element (PE) array** for 4-bit MAC operations
 - **SPI off-chip memory** for activations (Memory A) and weights (Memory B)
 - **Control Unit** to execute custom instructions and orchestrate computation
 - **Output-stationary dataflow** with pipelined MAC accumulation
