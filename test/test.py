@@ -101,7 +101,7 @@ async def load_matrices(dut, a, b):
             await send_instr(dut, make_instr(OP_LOAD, 1, r, c, b[c][r] & 0xF))
 
 
-async def read_matrix(dut):
+async def read_matrix_via_store(dut):
     out = [[0] * 3 for _ in range(3)]
     for r in range(3):
         for c in range(3):
@@ -111,6 +111,36 @@ async def read_matrix(dut):
             await RisingEdge(dut.clk)
             out[r][c] = _safe_int(dut.uo_out.value) & 0xF
     return out
+
+
+async def read_matrix(dut):
+    bits = []
+
+    # Start a readback transaction. The result request is synchronized into the
+    # SCK domain, so the first two SCK edges are CDC latency. Payload bit 0 is
+    # driven on the third edge.
+    dut.ui_in.value = _safe_int(dut.ui_in.value) & 0xF9
+    await RisingEdge(dut.clk)
+
+    for bit_idx in range(38):
+        dut.ui_in.value = _safe_int(dut.ui_in.value) | 4
+        await RisingEdge(dut.clk)
+        await RisingEdge(dut.clk)
+
+        if bit_idx >= 2:
+            bits.append(_safe_int(dut.uio_out.value) & 1)
+
+        dut.ui_in.value = _safe_int(dut.ui_in.value) & 0xFB
+        await RisingEdge(dut.clk)
+
+    dut.ui_in.value = (_safe_int(dut.ui_in.value) & 0xF9) | 2
+    await RisingEdge(dut.clk)
+
+    flat = [
+        sum(bits[(idx * 4) + bit] << bit for bit in range(4))
+        for idx in range(9)
+    ]
+    return [flat[row * 3:(row + 1) * 3] for row in range(3)]
 
 
 async def run_once(dut, a, b):
