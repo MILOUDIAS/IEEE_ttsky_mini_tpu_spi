@@ -1,6 +1,6 @@
 # 🧠 Mini-TPU: A Tiny Tapeout-Based Systolic Array Accelerator
 
-![mini-tpu-diagram](./mini_tpu_block.png)
+<!-- ![mini-tpu-diagram](./mini_tpu_block.png) -->
 
 This project implements a **Mini Tensor Processing Unit (Mini-TPU)** on the **Tiny Tapeout** open-source ASIC platform. It features a compact 3×3 **systolic array** optimized for efficient matrix multiplication, making it ideal for **resource-constrained AI inference** tasks.
 
