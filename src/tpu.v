@@ -15,7 +15,6 @@ module tpu (
 
     input wire  [`INST_WIDTH-1:0] instruction,
     output wire ready_to_send,
-    output wire [7:0]  result,   // upper bits zero-padded
     output wire [`ACC_WIDTH*`NN-1:0]  array_data_out
 
 );
@@ -37,8 +36,6 @@ module tpu (
     wire                       array_write_enable;
     wire [`DATA_WIDTH*`N-1:0]  array_a_in;
     wire [`DATA_WIDTH*`N-1:0]  array_b_in;
-    wire [1:0]                 array_output_row;
-    wire [1:0]                 array_output_col;
 
     array array_inst (
         .clk      (clk),
@@ -55,8 +52,6 @@ module tpu (
         .instruction(instruction),
 
         .array_write_enable(array_write_enable),
-        .array_output_row(array_output_row),
-        .array_output_col(array_output_col),
 
         .mema_data_in(mema_data_in),
         .mema_write_enable(mema_write_enable),
@@ -99,37 +94,5 @@ module tpu (
         .read_elem(memb_read_elem),
         .data_out(array_b_in)
     );
-
-    // ------------------------------------------------------------------
-    // Output mux — selects one of NN accumulators using {row, col}.
-    // Out-of-range row/col returns 0.
-    // ------------------------------------------------------------------
-    wire [`ACC_WIDTH-1:0] result_array [0:`NN-1];
-
-    genvar i;
-    generate
-        for (i = 0; i < `NN; i = i + 1) begin : extract_results
-            assign result_array[i] = array_data_out[`ACC_WIDTH*(i+1)-1:`ACC_WIDTH*i];
-        end
-    endgenerate
-
-    wire [`ACC_WIDTH-1:0] selected =
-        (array_output_row < `N && array_output_col < `N) ?
-            result_array[array_output_row*`N + array_output_col] :
-            {`ACC_WIDTH{1'b0}};
-
-    // Drive the unused upper bits of `result` through a (* keep *)
-    // flip-flop rather than a direct constant. Yosys would otherwise
-    // tie them straight to sky130_fd_sc_hd__conb_1.LO, whose internal
-    // pulldown to VGND causes magic to merge the corresponding output
-    // pins with VGND in the layout extraction — and LVS rejects the
-    // resulting "uo_out[7:4] shorted to VGND" mismatches.
-    (* keep = "true" *) reg [7-`ACC_WIDTH:0] result_high_q;
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) result_high_q <= {(8 - `ACC_WIDTH){1'b0}};
-        else        result_high_q <= {(8 - `ACC_WIDTH){1'b0}};
-    end
-
-    assign result = { result_high_q, selected };
 
 endmodule

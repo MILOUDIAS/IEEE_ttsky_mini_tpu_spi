@@ -1,8 +1,8 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1778435049" />
-    <testcase name="test_instruction_is_parallelized_once" classname="test_spi" file="/mnt/fda14e36-49c8-4508-a4b0-f37189565cd9/Base/Workshop_2026/IEEE_ttsky_mini_tpu_spi/test/spi/test_spi.py" lineno="90" time="0.006616830825805664" sim_time_ns="550.0" ratio_time="83121.36345620293" />
-    <testcase name="test_ready_pulse_is_held_until_read_transaction" classname="test_spi" file="/mnt/fda14e36-49c8-4508-a4b0-f37189565cd9/Base/Workshop_2026/IEEE_ttsky_mini_tpu_spi/test/spi/test_spi.py" lineno="106" time="0.012604951858520508" sim_time_ns="1280.0" ratio_time="101547.39299022111" />
-    <testcase name="test_multiple_readbacks_restart_at_bit_zero" classname="test_spi" file="/mnt/fda14e36-49c8-4508-a4b0-f37189565cd9/Base/Workshop_2026/IEEE_ttsky_mini_tpu_spi/test/spi/test_spi.py" lineno="125" time="0.023476362228393555" sim_time_ns="2420.0000000000005" ratio_time="103082.41014756214" />
+    <property name="random_seed" value="1778436317" />
+    <testcase name="test_instruction_is_parallelized_once" classname="test_spi" file="/mnt/fda14e36-49c8-4508-a4b0-f37189565cd9/Base/Workshop_2026/IEEE_ttsky_mini_tpu_spi/test/spi/test_spi.py" lineno="90" time="0.009469747543334961" sim_time_ns="550.0" ratio_time="58079.68982099247" />
+    <testcase name="test_ready_pulse_is_held_until_read_transaction" classname="test_spi" file="/mnt/fda14e36-49c8-4508-a4b0-f37189565cd9/Base/Workshop_2026/IEEE_ttsky_mini_tpu_spi/test/spi/test_spi.py" lineno="106" time="0.014183998107910156" sim_time_ns="1280.0" ratio_time="90242.53882875008" />
+    <testcase name="test_multiple_readbacks_restart_at_bit_zero" classname="test_spi" file="/mnt/fda14e36-49c8-4508-a4b0-f37189565cd9/Base/Workshop_2026/IEEE_ttsky_mini_tpu_spi/test/spi/test_spi.py" lineno="125" time="0.026020288467407227" sim_time_ns="2420.0000000000005" ratio_time="93004.34939571367" />
   </testsuite>
 </testsuites>

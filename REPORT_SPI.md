@@ -53,3 +53,17 @@ After `RUN`, the first post-ready SPI transaction is consumed as the MISO result
 Because the result request is synchronized into the `sclk` domain, the master must provide two SCLK edges after lowering `cs` before payload bit 0 is valid. The regression tests model this by ignoring the first two readback edges and then collecting 36 bits.
 
 The top-level cocotb test now verifies the intended SPI result path directly: it sends LOAD/RUN over MOSI and reads the flattened matrix over MISO, rather than using STORE instructions and `uo_out` after `RUN`.
+
+## Area Optimization Note
+
+The hardened SPI originally had two 36-bit result buffers: one in the `clk` domain and another in the `sclk` domain. The `clk`-domain buffer is already held stable until the `sclk` side acknowledges readback, so the duplicate `sclk`-domain buffer was removed. This saves 36 flip-flops plus associated mux/reset logic while preserving the bundled-data CDC contract.
+
+The `clk`-domain duplicate instruction register was also removed. The completed instruction word is held in the `sclk` domain until the next full SPI frame, while the `clk` domain produces the one-cycle `data_ready` pulse from the synchronized request toggle. This saves another 12 flip-flops.
+
+Because MISO is now the canonical result path, the legacy `STORE`/`uo_out` result path was removed from the TPU datapath. This deletes the STORE row/column latches, the 9-to-1 accumulator result mux, and the `result` ports through `tpu.v`/`tpu_interface.v`. The TT `uo_out` pins are now held at zero in the wrapper with kept flops for LVS stability.
+
+Further area reductions should prioritize:
+
+- Reducing constant-output keep registers if the final physical flow no longer needs them for LVS.
+- Keeping `CLOCK_PERIOD` loose enough that CTS and timing repair do not add excessive buffers.
+- Checking `metrics.json` after every LibreLane run; post-CTS utilization, not just synthesis cell area, decides whether the 167 x 108 um tile will legalize.

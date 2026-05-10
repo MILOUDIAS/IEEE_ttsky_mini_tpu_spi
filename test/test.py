@@ -9,7 +9,7 @@
 #   uio_out[0] = miso
 #
 # Instructions are 12-bit (LSB first):
-#   [11:10] opcode  (01=RUN, 10=LOAD, 11=STORE)
+#   [11:10] opcode  (01=RUN, 10=LOAD)
 #   [9]     mem_sel (0=A, 1=B for LOAD)
 #   [7:6]   row
 #   [5:4]   col
@@ -26,7 +26,7 @@ from cocotb.triggers import RisingEdge
 
 GL_TEST = bool(os.environ.get("GATES") == "yes")
 
-OP_RUN, OP_LOAD, OP_STORE = 0b01, 0b10, 0b11
+OP_RUN, OP_LOAD = 0b01, 0b10
 
 
 def make_instr(op, mem_sel=0, row=0, col=0, imm=0):
@@ -99,18 +99,6 @@ async def load_matrices(dut, a, b):
     for r in range(3):
         for c in range(3):
             await send_instr(dut, make_instr(OP_LOAD, 1, r, c, b[c][r] & 0xF))
-
-
-async def read_matrix_via_store(dut):
-    out = [[0] * 3 for _ in range(3)]
-    for r in range(3):
-        for c in range(3):
-            await send_instr(dut, make_instr(OP_STORE, 0, r, c))
-            # Allow the STORE-row/col latch and result mux to settle.
-            await RisingEdge(dut.clk)
-            await RisingEdge(dut.clk)
-            out[r][c] = _safe_int(dut.uo_out.value) & 0xF
-    return out
 
 
 async def read_matrix(dut):

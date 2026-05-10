@@ -32,12 +32,10 @@ reg tx_req_sync_2;
 reg tx_ack_toggle_sclk;
 reg is_sending;
 reg [$clog2(OUTPUT_DATA_BITS+1)-1:0] output_data_bit_counter;
-reg [OUTPUT_DATA_BITS-1:0] tx_shift_data;
 
 reg instr_req_sync_1;
 reg instr_req_sync_2;
 
-reg [`INSTRUCTION_WIDTH-1:0] instruction_clk;
 reg data_ready;
 
 reg [OUTPUT_DATA_BITS-1:0] tx_data_clk;
@@ -60,7 +58,6 @@ always @(posedge sclk or negedge rst_n) begin
         tx_ack_toggle_sclk <= 0;
         is_sending <= 0;
         output_data_bit_counter <= 0;
-        tx_shift_data <= 0;
         miso <= 0;
     end else begin
         tx_req_sync_1 <= tx_req_toggle_clk;
@@ -71,7 +68,7 @@ always @(posedge sclk or negedge rst_n) begin
             is_sending <= 0;
             output_data_bit_counter <= 0;
         end else if (is_sending) begin
-            miso <= tx_shift_data[output_data_bit_counter];
+            miso <= tx_data_clk[output_data_bit_counter];
             if (output_data_bit_counter == OUTPUT_DATA_BITS-1) begin
                 is_sending <= 0;
                 output_data_bit_counter <= 0;
@@ -80,7 +77,6 @@ always @(posedge sclk or negedge rst_n) begin
                 output_data_bit_counter <= output_data_bit_counter + 1'b1;
             end
         end else if (tx_pending_sclk) begin
-            tx_shift_data <= tx_data_clk;
             miso <= tx_data_clk[0];
             is_sending <= 1;
             output_data_bit_counter <= 1;
@@ -105,7 +101,6 @@ always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         instr_req_sync_1 <= 0;
         instr_req_sync_2 <= 0;
-        instruction_clk <= 0;
         data_ready <= 0;
 
         tx_data_clk <= 0;
@@ -121,7 +116,6 @@ always @(posedge clk or negedge rst_n) begin
 
         data_ready <= 0;
         if (instr_req_sync_1 != instr_req_sync_2) begin
-            instruction_clk <= instr_data_sclk;
             data_ready <= 1;
         end
 
@@ -132,6 +126,6 @@ always @(posedge clk or negedge rst_n) begin
     end
 end
 
-assign data_buffer_output = data_ready ? instruction_clk : 0;
+assign data_buffer_output = data_ready ? instr_data_sclk : 0;
 
 endmodule

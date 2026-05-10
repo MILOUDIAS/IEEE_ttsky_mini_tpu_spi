@@ -12,10 +12,7 @@ module tpu_interface(
     input wire cs,
     input wire sclk,
 
-    output wire miso,
-
-    // tpu wire
-    output wire [7:0] result
+    output wire miso
 );
 
 wire [`ACC_WIDTH*`NN-1:0]  array_data_out;
@@ -26,7 +23,6 @@ tpu uut_tpu (
     .clk(clk),
     .rst_n(rst_n),
     .instruction(instruction),
-    .result(result),
     .ready_to_send(ready_to_send),
     .array_data_out(array_data_out)
 );

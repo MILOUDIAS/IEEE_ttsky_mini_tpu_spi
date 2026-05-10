@@ -29,20 +29,24 @@ module tt_um_tpu (
 // registers survive synthesis as real dfrtp cells driving each pin.
 (* keep = "true" *) reg [6:0] uio_oe_high_q;
 (* keep = "true" *) reg [6:0] uio_out_high_q;
+(* keep = "true" *) reg [7:0] uo_out_q;
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         uio_oe_high_q  <= 7'b0;
         uio_out_high_q <= 7'b0;
+        uo_out_q       <= 8'b0;
     end else begin
         uio_oe_high_q  <= 7'b0;
         uio_out_high_q <= 7'b0;
+        uo_out_q       <= 8'b0;
     end
 end
 
 assign uio_oe[0]    = 1'b1;            // MISO output enable (constant 1)
 assign uio_oe[7:1]  = uio_oe_high_q;   // unused; held at 0 by FFs
 assign uio_out[7:1] = uio_out_high_q;  // unused; held at 0 by FFs
+assign uo_out       = uo_out_q;        // matrix readback is on MISO
 
 
 tpu_interface uut_tpu_interface(
@@ -53,11 +57,7 @@ tpu_interface uut_tpu_interface(
     .mosi(ui_in[0]), // Assuming MOSI is connected to uio_in[0]
     .cs(ui_in[1]),   // Assuming CS is connected to uio_in[1]
     .sclk(ui_in[2]), // Assuming SCLK is connected to uio_in[2]
-
-    .miso(uio_out[0]), // Assuming MISO is connected to uio_out[0]
-
-    // tpu wire
-    .result(uo_out)
+    .miso(uio_out[0]) // Assuming MISO is connected to uio_out[0]
 );
 wire _unused = &{ui_in[7:3], uio_in[7:0], ena}; // Prevent unused signal warnings
 
